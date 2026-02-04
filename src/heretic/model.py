@@ -271,13 +271,12 @@ class Model:
         Resets the model to a clean state for the next trial or evaluation.
 
         Behavior:
-        - Fast path: If the same model is loaded and doesn't need full reload,
+        - Fast path: If model is a PeftModel and doesn't need full reload,
           resets LoRA adapter weights to zero (identity transformation).
         - Slow path: If switching models or after merge_and_unload(),
           performs full model reload with quantization config.
         """
-        current_model = getattr(self.model.config, "name_or_path", None)
-        if current_model == self.settings.model and not self.needs_reload:
+        if isinstance(self.model, PeftModel) and not self.needs_reload:
             # Reset LoRA adapters to zero (identity transformation)
             for name, module in self.model.named_modules():
                 if "lora_B" in name and hasattr(module, "weight"):
